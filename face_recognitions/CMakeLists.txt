@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(face_regonitions)
+project(face_recognitions)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
@@ -30,12 +30,14 @@ ament_python_install_package(${PROJECT_NAME})
 install(PROGRAMS
   "scripts/camera_script.py"
   "scripts/display_script.py"
+  "scripts/face_recog_script.py"
   DESTINATION lib/${PROJECT_NAME}
 )
 
 ################ INSTALL LAUNCH, ETC #################
 install(DIRECTORY
   launch
+  image
   # add directories here
   DESTINATION share/${PROJECT_NAME})
 
