@@ -16,7 +16,14 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 # find dependencies
-find_package(ament_cmake REQUIRED)
+find_package(ament_cmake REQUIRED)		# cpp (optional)
+find_package(rclcpp REQUIRED)			# cpp (optional)
+find_package(ament_cmake_python REQUIRED)   	# python (optional)
+find_package(rclpy REQUIRED)                	# python (optional)
+find_package(rosidl_default_generators REQUIRED)
+find_package(geometry_msgs)
+find_package(std_msgs)
+find_package(sensor_msgs)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
@@ -40,6 +47,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/SetEnb.srv"
   "action/Recognition.action"
   DEPENDENCIES std_msgs
+  DEPENDENCIES sensor_msgs
 )
 
 

@@ -20,6 +20,10 @@ find_package(ament_cmake REQUIRED)		# cpp (optional)
 find_package(rclcpp REQUIRED)			# cpp (optional)
 find_package(ament_cmake_python REQUIRED)   	# python (optional)
 find_package(rclpy REQUIRED)                	# python (optional)
+find_package(rosidl_default_generators REQUIRED)
+find_package(geometry_msgs)
+find_package(std_msgs)
+find_package(sensor_msgs)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
@@ -28,9 +32,9 @@ ament_python_install_package(${PROJECT_NAME})
 
 # Install Python executables
 install(PROGRAMS
-  "scripts/camera_script.py"
-  "scripts/display_script.py"
-  "scripts/face_recog_script.py"
+  scripts/camera_script.py
+  scripts/display_script.py
+  scripts/face_recog_script.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
