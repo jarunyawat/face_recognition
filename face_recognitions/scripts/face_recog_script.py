@@ -4,7 +4,6 @@ import rclpy
 from rclpy.node import Node
 from rclpy.action import ActionClient
 import numpy as np
-from ament_index_python.packages import get_package_share_directory
 from face_recognitions_interface.srv import SetEnb
 from face_recognitions_interface.action import Recognition
 from sensor_msgs.msg import Image
@@ -21,8 +20,10 @@ class FaceRecognitionInterface(Node):
         self.current_frame = None
         self.isEnb = False
         self.ready = True
+        self.boundBox = []
+        self.name = []
 
-    def send_goal(self, img):
+    def recognition_send_goal(self, img):
         goal_msg = Recognition.Goal()
         goal_msg.img = self.br.cv2_to_imgmsg(img)
 
@@ -30,9 +31,9 @@ class FaceRecognitionInterface(Node):
 
         self._send_goal_future = self._action_client.send_goal_async(goal_msg)
 
-        self._send_goal_future.add_done_callback(self.goal_response_callback)
+        self._send_goal_future.add_done_callback(self.recognition_goal_response_callback)
 
-    def goal_response_callback(self, future):
+    def recognition_goal_response_callback(self, future):
         goal_handle = future.result()
         if not goal_handle.accepted:
             self.get_logger().info('Goal rejected :(')
@@ -41,20 +42,25 @@ class FaceRecognitionInterface(Node):
         self.get_logger().info('Goal accepted :)')
 
         self._get_result_future = goal_handle.get_result_async()
-        self._get_result_future.add_done_callback(self.get_result_callback)
+        self._get_result_future.add_done_callback(self.recognition_get_result_callback)
 
-    def get_result_callback(self, future):
+    def recognition_get_result_callback(self, future):
         self.ready = True
         result = future.result().result
         self.get_logger().info(f"{result.name}")
+        self.boundBox = result.roi_box
+        self.name = result.name
         self.get_logger().info("Result recieve")
     
     def listener_callback(self, data):
         self.current_frame = self.br.imgmsg_to_cv2(data)
         if self.current_frame is not None and self.isEnb and self.ready:
             self.ready = False
-            self.send_goal(self.current_frame)
+            self.recognition_send_goal(self.current_frame)
         flip_img = cv2.flip(self.current_frame, 1)
+        for _ in zip(self.boundBox,self.name):
+            cv2.putText(flip_img, _[1], (_[0].xmin, _[0].ymin), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
+            cv2.rectangle(flip_img,(_[0].xmin, _[0].ymin), (_[0].xmin+_[0].width, _[0].ymin+_[0].height), (0, 0, 255), 1)
         cv2.imshow("camera", flip_img)
         cv2.waitKey(1)
     

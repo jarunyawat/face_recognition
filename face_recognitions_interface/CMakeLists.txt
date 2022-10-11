@@ -46,6 +46,7 @@ find_package(std_msgs)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/SetEnb.srv"
   "action/Recognition.action"
+  "msg/Roibox.msg"
   DEPENDENCIES std_msgs
   DEPENDENCIES sensor_msgs
 )

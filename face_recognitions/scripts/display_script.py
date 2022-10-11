@@ -11,20 +11,19 @@ from ament_index_python.packages import get_package_share_directory
 from face_recognitions_interface.action import Recognition
 from cv_bridge import CvBridge
 import os
+from face_recognitions_interface.msg import Roibox
 
 class FaceRecognitionBackend(Node):
     def __init__(self):
         super().__init__("face_recognition_backend")
         self.rate = self.create_rate(10)
-        self._action_server = ActionServer(self, Recognition, 'recognition', self.execute_callback)
+        self._action_server = ActionServer(self, Recognition, 'recognition', self.recognition_execute_callback)
         self.br = CvBridge()
         #img processing initialization
         mp_face_detection = mp.solutions.face_detection
         self.face_recognition = FaceNet()
         self.dataset = dict()
         label_name = ["Jarunyawat"]
-        self.roi_box = list()
-        self.face_img = list()
         self.face_detection = mp_face_detection.FaceDetection(
         model_selection=0, min_detection_confidence=0.5)
         #load dataset
@@ -35,12 +34,12 @@ class FaceRecognitionBackend(Node):
         self.dataset[name] = np.array(data)
         self.current_frame = None
     
-    def execute_callback(self, goal_handle):
+    def recognition_execute_callback(self, goal_handle):
         self.get_logger().info('Executing goal...')
         result = Recognition.Result()
         result.header.stamp = self.get_clock().now().to_msg()
         img = self.br.imgmsg_to_cv2(goal_handle.request.img)
-        result.name = self.detect(img)
+        [result.roi_box, result.name] = self.detect(img)
         goal_handle.succeed()
         return result
 
@@ -52,8 +51,8 @@ class FaceRecognitionBackend(Node):
         rgb_image.flags.writeable = False
         results = self.face_detection.process(rgb_image)
         rgb_image.flags.writeable = False
-        self.roi_box = []
-        self.face_img = []
+        roi_box = []
+        face_img = []
         if results.detections:
             for detection in results.detections:
                 #mp_drawing.draw_detection(image, detection)
@@ -64,12 +63,16 @@ class FaceRecognitionBackend(Node):
                 try:
                     crop_img = cv2.resize(crop_img, (160, 160))
                     expand_crop_img = np.expand_dims(crop_img, axis=0)
-                    self.roi_box.append(boundBox)
-                    self.face_img.append(expand_crop_img)
+                    boundBox_msg = Roibox()
+                    boundBox_msg.xmin = boundBox[0]
+                    boundBox_msg.ymin = boundBox[1]
+                    boundBox_msg.width = boundBox[2]
+                    boundBox_msg.height = boundBox[3]
+                    roi_box.append(boundBox_msg)
+                    face_img.append(expand_crop_img)
                 except:
                     pass
-                cv2.rectangle(flip_img,(boundBox[0], boundBox[1]), (boundBox[0]+boundBox[3], boundBox[1]+boundBox[2]), (0, 0, 255), 1)
-            for _ in zip(self.roi_box, self.face_img):
+            for _ in zip(roi_box, face_img):
                 embeddings = self.face_recognition.embeddings(_[1])
                 distant = np.average(np.linalg.norm(self.dataset["Jarunyawat"] - embeddings))
                 if distant < 5.0:
@@ -77,7 +80,7 @@ class FaceRecognitionBackend(Node):
                 else:
                     name_list.append("Unknown")
         self.get_logger().info(f"{name_list}")
-        return name_list
+        return [roi_box, name_list]
         
 def main(args=None):
     rclpy.init(args=args)
