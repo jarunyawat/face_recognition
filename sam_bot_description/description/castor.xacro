@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <!-- caster properties -->
+    <xacro:property name="caster_radius" value="0.015"/>
+    <xacro:property name="caster_ygap" value="0.3928"/>
+    <xacro:property name="caster_zoff" value="-0.055"/>
+    <xacro:property name="caster_xoff" value="0.4"/>
+    <xacro:property name="caster_cm" value="0.0 0.0 0.0"/>
+    <xacro:property name="caster_mass" value="0.1"/>
+    <xacro:property name="caster_ixx" value="0.000026"/>
+    <xacro:property name="caster_iyy" value="0.000026"/>
+    <xacro:property name="caster_izz" value="0.000026"/>
+    <xacro:property name="caster_ixy" value="0.0"/>
+    <xacro:property name="caster_ixz" value="0.0"/>
+    <xacro:property name="caster_iyz" value="0.0"/>
+    <!-- Caster Wheel -->
+    <xacro:macro name="caster" params="prefix x_reflect y_reflect">
+        <link name="${prefix}_caster">
+            <visual>
+                <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+                <geometry>
+                    <sphere radius="${caster_radius}"/>
+                </geometry>
+                <material name="Gray">
+                    <color rgba="0.5 0.5 0.5 1.0"/>
+                </material>
+            </visual>
+        </link>
+        <joint name="${prefix}_caster_joint" type="fixed">
+            <parent link="base_link"/>
+            <child link="${prefix}_caster"/>
+            <origin xyz="${x_reflect*caster_xoff} ${y_reflect*(base_width/2+caster_ygap)} ${-caster_zoff}" rpy="0 0 0"/>
+        </joint>
+    </xacro:macro>
+</robot>

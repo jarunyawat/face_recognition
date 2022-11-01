@@ -1,0 +1,68 @@
+URDF configurations
+visual params:
+	base_frame:
+		offset (from base_footprint) x, y, z : 0, 0, 0.085
+		offset rpy : 0, 0, 0
+	
+	wheel:
+		cylinder radius : 0.085
+		cylinder thickness: 0.073
+		seperation: 0.0 , 0.3928
+
+	caster:
+		cylinder radius : 0.015
+		cylinder thickness: 0.050
+		seperation: 0.4 , 0.3928
+		offset (from base_frame): -0.055
+
+
+inertial params:
+	base:
+		mass: 15 kg
+		cm position w.r.t. base_frame : x = 0.00083, y = 0.0043, z = 0.03185
+		Ixx = 0.21649063225
+		Iyy = 0.27111700496
+		Izz = 0.39345087808
+		Ixy = -0.39345087808
+		Ixz = 0.00342580824
+		Iyz = 0.00120374007
+
+	wheel:
+		mass: 3.75 kg
+		cm position w.r.t. body attach frame: x = 0, y = 0, z = 0
+		Ixx = 0.008439
+		Iyy = 0.008439
+		Izz = 0.013547
+		Ixy = 0.0
+		Ixz = 0.0
+		Iyz = 0.0
+
+
+	caster:
+		mass: 0.1 kg
+		cm position w.r.t. body attach frame: x = 0, y = 0, z = 0
+		Ixx = 0.000026
+		Iyy = 0.000026
+		Izz = 0.000026
+		Ixy = 0.0
+		Ixz = 0.0
+		Iyz = 0.0
+
+collision params:
+	shape: box
+	size: 	length = 0.65 
+		width = 0.5
+		height = 0.26
+
+device params:
+	lsd:
+		position w.r.t. base_frame: x = 0.25, y = 0.0, z  = 0.1588
+		orientation = 0 0 0
+
+	imu:
+		position w.r.t. base frame: x = 0, y = 0, z = -0.0676
+		orientation = 0 0 0
+
+	camera: ***this configurations is the only one that reference from real @home model. The others are mock up configurations.
+		position w.r.t. base_frame: x = 0.17843, y = 0, z = 1.5558
+		

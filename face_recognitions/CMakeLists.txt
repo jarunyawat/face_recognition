@@ -33,8 +33,10 @@ ament_python_install_package(${PROJECT_NAME})
 # Install Python executables
 install(PROGRAMS
   scripts/camera_script.py
-  scripts/display_script.py
-  scripts/face_recog_script.py
+  scripts/face_recognition_backend.py
+  scripts/face_recognition_script.py
+  scripts/people_detection_behavior.py
+  scripts/people_detection_scripts.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
@@ -42,6 +44,7 @@ install(PROGRAMS
 install(DIRECTORY
   launch
   image
+  face_recognitions
   # add directories here
   DESTINATION share/${PROJECT_NAME})
 
