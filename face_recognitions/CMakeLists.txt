@@ -37,6 +37,8 @@ install(PROGRAMS
   scripts/face_recognition_script.py
   scripts/people_detection_behavior.py
   scripts/people_detection_scripts.py
+  scripts/people_detect_rootfile.py
+  scripts/people_pos_rel_odom_scripts.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -7,8 +7,10 @@ import pyrealsense2 as rs2
 import cv2
 import mediapipe as mp
 
-from geometry_msgs.msg import TransformStamped
+from geometry_msgs.msg import TransformStamped,PoseStamped
 from tf2_ros import TransformBroadcaster
+from std_srvs.srv import Empty
+from std_msgs.msg import Int8
 
 from tf2_ros import TransformException
 from tf2_ros.buffer import Buffer
@@ -18,9 +20,13 @@ class RealSenseListener(Node):
     def __init__(self):
         super().__init__('coordinate_transform')
         self.bridge = CvBridge()
-        self.img_sub = self.create_subscription(Image, '/camera/color/image_raw', self.imageCallback,10)
-        self.depth_sub = self.create_subscription(Image, '/camera/depth/image_rect_raw', self.imageDepthCallback,10)
-        self.camerainfo_sub = self.create_subscription(CameraInfo, '/camera/depth/camera_info', self.imageDepthInfoCallback,10)
+        self.img_sub = self.create_subscription(Image, '/depth_camera/image_raw', self.imageCallback,10)
+        self.depth_sub = self.create_subscription(Image, '/depth_camera/depth/image_raw', self.imageDepthCallback,10)
+        self.camerainfo_sub = self.create_subscription(CameraInfo, '/depth_camera/depth/camera_info', self.imageDepthInfoCallback,10)
+        self.follow_srv = self.create_service(Empty,'/people_detection/enable',self.follow_callback)
+        self.arrival_srv = self.create_service(Empty,'/people_detection/arrival',self.arrival_callback)
+        self.goal_updater = self.create_publisher(PoseStamped,'goal_update',10)
+        self.status_pub = self.create_publisher(Int8,'/people_detection/status',10)
         self.intrinsics = None
         self.br = CvBridge()
         self.tf_broadcaster = TransformBroadcaster(self)
@@ -32,8 +38,9 @@ class RealSenseListener(Node):
         self.pose = self.mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5)
         self.point_x = 0
         self.point_y = 0
-        self.timer = self.create_timer(1.0, self.on_timer)
         self.detect_people = False
+        self.follow_enb = False
+        self.status = Int8()
 
     def imageCallback(self, data):
         cv_image = self.br.imgmsg_to_cv2(data)
@@ -47,6 +54,7 @@ class RealSenseListener(Node):
         # Draw the pose annotation on the image.
         cv_image.flags.writeable = True
         cv_image = cv2.cvtColor(cv_image, cv2.COLOR_RGB2BGR)
+        self.detect_people = False
         # Flip the image horizontally for a selfie-view display.
         if results.pose_landmarks!=None:
             mid_x_shoulder = (results.pose_landmarks.landmark[self.lmPose.LEFT_SHOULDER].x + results.pose_landmarks.landmark[self.lmPose.RIGHT_SHOULDER].x)/2 * w
@@ -74,7 +82,7 @@ class RealSenseListener(Node):
             depth_image = self.bridge.imgmsg_to_cv2(data, data.encoding)
             #mediapipe pose
             if self.intrinsics:
-                if self.detect_people:
+                if self.detect_people and self.follow_enb:
                     depth = depth_image[self.point_y, self.point_x]
                     XYZ = rs2.rs2_deproject_pixel_to_point(self.intrinsics, [self.point_x, self.point_y], depth)
                     t = TransformStamped()
@@ -118,23 +126,18 @@ class RealSenseListener(Node):
             print(e)
             return
     
-    def on_timer(self):
-        # Store frame names in variables that will be used to
-        # compute transformations
-        from_frame_rel = 'odom'
-        to_frame_rel = 'user'
-
-        if self.detect_people:
-            try:
-                t = self.tf_buffer.lookup_transform(
-                    to_frame_rel,
-                    from_frame_rel,
-                    rclpy.time.Time())
-            except TransformException as ex:
-                self.get_logger().info(
-                    f'Could not transform {to_frame_rel} to {from_frame_rel}: {ex}')
-                return
-            self.get_logger().info(f"global coordinate X:{ t.transform.translation.x} Y:{ t.transform.translation.y} Z:{ t.transform.translation.z}")
+    def follow_callback(self,request,response):
+        if not self.follow_enb:
+            if self.detect_people:
+                self.status.data = 1
+                self.follow_enb = True
+        return response
+    
+    def arrival_callback(self, request, response):
+        if self.follow_enb:
+            self.status.data = 2
+            self.follow_enb = False
+        return response
 
 def main(args=None):
     rclpy.init(args=args)

@@ -43,7 +43,7 @@ class AbilityBehavior(py_trees.behaviour.Behaviour):
 
     def update(self) -> py_trees.common.Status:
 
-        if self.param_status.data == 1: #change to be your condition
+        if self.param_status.data == 2: #change to be your condition
             #ทำงานเสร็จค่อย 1
             return py_trees.common.Status.SUCCESS
 
@@ -51,9 +51,14 @@ class AbilityBehavior(py_trees.behaviour.Behaviour):
             self.send_enable_request()
 
             return py_trees.common.Status.RUNNING
+        
+        elif self.param_status.data == 1: #change to be your condition
 
-        else: #change to be your condition
+            return py_trees.common.Status.RUNNING
+
+        elif self.param_status.data == -1: #change to be your condition
             return py_trees.common.Status.FAILURE
 
     def terminate(self, new_status):
         pass
+    
