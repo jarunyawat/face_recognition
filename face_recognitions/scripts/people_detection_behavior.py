@@ -4,7 +4,7 @@ import py_trees
 from std_srvs.srv import Empty
 from std_msgs.msg import Int8
 
-class AbilityBehavior(py_trees.behaviour.Behaviour):
+class PeopleDetectBehavior(py_trees.behaviour.Behaviour):
     """
     Node Name :
         * node name *
@@ -18,7 +18,7 @@ class AbilityBehavior(py_trees.behaviour.Behaviour):
     """
     print("init_work1")
     def __init__(self):
-        super(AbilityBehavior,self).__init__()
+        super(PeopleDetectBehavior,self).__init__()
         self.param_status = Int8()
         self.param_status.data = 0
 

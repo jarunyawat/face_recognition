@@ -20,13 +20,13 @@ class RealSenseListener(Node):
     def __init__(self):
         super().__init__('coordinate_transform')
         self.bridge = CvBridge()
-        self.img_sub = self.create_subscription(Image, '/depth_camera/image_raw', self.imageCallback,10)
-        self.depth_sub = self.create_subscription(Image, '/depth_camera/depth/image_raw', self.imageDepthCallback,10)
-        self.camerainfo_sub = self.create_subscription(CameraInfo, '/depth_camera/depth/camera_info', self.imageDepthInfoCallback,10)
-        self.follow_srv = self.create_service(Empty,'/people_detection/enable',self.follow_callback)
-        self.arrival_srv = self.create_service(Empty,'/people_detection/arrival',self.arrival_callback)
+        self.img_sub = self.create_subscription(Image, 'depth_camera/image_raw', self.imageCallback,10)
+        self.depth_sub = self.create_subscription(Image, 'depth_camera/depth/image_raw', self.imageDepthCallback,10)
+        self.camerainfo_sub = self.create_subscription(CameraInfo, 'depth_camera/depth/camera_info', self.imageDepthInfoCallback,10)
+        self.follow_srv = self.create_service(Empty,'people_detection/enable',self.follow_callback)
+        self.arrival_srv = self.create_service(Empty,'people_detection/arrival',self.arrival_callback)
         self.goal_updater = self.create_publisher(PoseStamped,'goal_update',10)
-        self.status_pub = self.create_publisher(Int8,'/people_detection/status',10)
+        self.status_pub = self.create_publisher(Int8,'people_detection/status',10)
         self.intrinsics = None
         self.br = CvBridge()
         self.tf_broadcaster = TransformBroadcaster(self)
@@ -83,6 +83,7 @@ class RealSenseListener(Node):
             #mediapipe pose
             if self.intrinsics:
                 if self.detect_people and self.follow_enb:
+                    # self.get_logger().info("publish coordinate")
                     depth = depth_image[self.point_y, self.point_x]
                     XYZ = rs2.rs2_deproject_pixel_to_point(self.intrinsics, [self.point_x, self.point_y], depth)
                     t = TransformStamped()
@@ -94,8 +95,8 @@ class RealSenseListener(Node):
 
                     # Turtle only exists in 2D, thus we get x and y translation
                     # coordinates from the message and set the z coordinate to 0
-                    t.transform.translation.x = XYZ[2]
-                    t.transform.translation.y = -XYZ[0]
+                    t.transform.translation.x = XYZ[2]/1000.0 # mm to m
+                    t.transform.translation.y = -XYZ[0]/1000.0 # mm to m
                     t.transform.translation.z = 0.0
 
                     # Send the transformation

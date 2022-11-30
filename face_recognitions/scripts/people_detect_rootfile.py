@@ -11,12 +11,12 @@ import rclpy
 import sys
 from std_msgs.msg import Empty
 
-from people_detection_behavior import AbilityBehavior
+from people_detection_behavior import PeopleDetectBehavior
 
 def find_people_root()-> py_trees.behaviour.Behaviour:
     root = py_trees.composites.Sequence(name="Find People")
 
-    root.add_children([AbilityBehavior()])   
+    root.add_children([PeopleDetectBehavior()])   
 
     return root
 
