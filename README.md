@@ -8,8 +8,8 @@ ros2 launch face_recognitions people_detection.launch.py
 ## Topic
 ### Publish
 **/goal_update**
-Publish people position in xy coordinate relative to map to bt naigator for following dynamic object
+Publish people position in xy coordinate relative to map to bt naigator for following dynamic object<br/>
 **/people_detection/status**
-Publish status of the node (0=wait for command,1=running,2=succeed,-1=fail)
+Publish status of the node (0=wait for command,1=running,2=succeed,-1=fail)<br/>
 ### Subscribe
 ## Service
