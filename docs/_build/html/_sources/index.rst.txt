@@ -6,15 +6,7 @@
 Welcome to cacao_people_perception's documentation!
 ===================================================
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
-
+fhsdfsjkflkdamvlkvmasvmaklv
 
 Indices and tables
 ==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
