@@ -24,7 +24,7 @@ class RealSenseListener(Node):
     def on_timer(self):
         # Store frame names in variables that will be used to
         # compute transformations
-        from_frame_rel = 'odom'
+        from_frame_rel = 'camera_link'
         to_frame_rel = 'user'
 
         if self.status.data == 1:
@@ -33,10 +33,11 @@ class RealSenseListener(Node):
                     to_frame_rel,
                     from_frame_rel,
                     rclpy.time.Time())
+                self.get_logger().info(f"global coordinate X:{ t.transform.translation.x} Y:{ t.transform.translation.y} Z:{ t.transform.translation.z}")
+                # self.goal_updater.publish()
             except TransformException as ex:
                 self.get_logger().info(f'Could not transform {to_frame_rel} to {from_frame_rel}: {ex}')
                 return
-            self.get_logger().info(f"global coordinate X:{ t.transform.translation.x} Y:{ t.transform.translation.y} Z:{ t.transform.translation.z}")
         self.status_pub.publish(self.status)
 
 def main(args=None):

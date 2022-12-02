@@ -3,10 +3,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to cacao_people_perception's documentation!
+cacao_people_perception's documentation!
 ===================================================
 
-fhsdfsjkflkdamvlkvmasvmaklv
+Package for face recognition and people perception for Cacao mobile robot
 
 Indices and tables
 ==================

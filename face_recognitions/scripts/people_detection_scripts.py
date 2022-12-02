@@ -32,6 +32,7 @@ class RealSenseListener(Node):
         self.tf_broadcaster = TransformBroadcaster(self)
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
+        self.timer = self.create_timer(1.0, self.on_timer)
         #mediapipe
         self.mp_pose = mp.solutions.pose
         self.lmPose  = self.mp_pose.PoseLandmark
@@ -126,6 +127,29 @@ class RealSenseListener(Node):
         except CvBridgeError as e:
             print(e)
             return
+    
+    def on_timer(self):
+        from_frame_rel = 'user'
+        to_frame_rel = 'camera_link'
+
+        if self.status.data == 1:
+            try:
+                t = self.tf_buffer.lookup_transform(
+                    to_frame_rel,
+                    from_frame_rel,
+                    rclpy.time.Time())
+                self.get_logger().info(f"global coordinate X:{ t.transform.translation.x} Y:{ t.transform.translation.y} Z:{ t.transform.translation.z}")
+                pose_msg = PoseStamped()
+                pose_msg.header.stamp = self.get_clock().now().to_msg()
+                pose_msg.pose.position.x = t.transform.translation.x
+                pose_msg.pose.position.y = t.transform.translation.y
+                self.goal_updater.publish(pose_msg)
+            except TransformException as ex:
+                self.get_logger().info(f'Could not transform {to_frame_rel} to {from_frame_rel}: {ex}')
+                return
+        self.status_pub.publish(self.status)
+        if self.status.data == 2:
+            self.status.data = 0
     
     def follow_callback(self,request,response):
         if not self.follow_enb:
