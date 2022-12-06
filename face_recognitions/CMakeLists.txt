@@ -39,6 +39,8 @@ install(PROGRAMS
   scripts/people_detection_scripts.py
   scripts/people_detect_rootfile.py
   scripts/people_pos_rel_odom_scripts.py
+  scripts/base_controller.py
+  scripts/inverse_kinematics.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

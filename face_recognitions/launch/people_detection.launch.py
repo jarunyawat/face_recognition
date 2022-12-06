@@ -30,5 +30,9 @@ def generate_launch_description():
             ("depth_camera/depth/camera_info","camera/depth/camera_info"),
         ]
     )
-    entity_to_run = [rs2_camera_node,people_detection_interface]
+    controller = Node(
+        package="base_controller.py",
+        executable="people_detection_scripts.py",
+    )
+    entity_to_run = [rs2_camera_node,people_detection_interface,controller]
     return LaunchDescription(entity_to_run)

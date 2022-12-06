@@ -20,9 +20,9 @@ class RealSenseListener(Node):
     def __init__(self):
         super().__init__('coordinate_transform')
         self.bridge = CvBridge()
-        self.img_sub = self.create_subscription(Image, 'depth_camera/image_raw', self.imageCallback,10)
-        self.depth_sub = self.create_subscription(Image, 'depth_camera/depth/image_raw', self.imageDepthCallback,10)
-        self.camerainfo_sub = self.create_subscription(CameraInfo, 'depth_camera/depth/camera_info', self.imageDepthInfoCallback,10)
+        self.img_sub = self.create_subscription(Image, 'camera/color/image_raw', self.imageCallback,10)
+        self.depth_sub = self.create_subscription(Image, 'camera/depth/image_rect_raw', self.imageDepthCallback,10)
+        self.camerainfo_sub = self.create_subscription(CameraInfo, 'camera/depth/camera_info', self.imageDepthInfoCallback,10)
         self.follow_srv = self.create_service(Empty,'people_detection/enable',self.follow_callback)
         self.arrival_srv = self.create_service(Empty,'people_detection/arrival',self.arrival_callback)
         self.goal_updater = self.create_publisher(PoseStamped,'goal_update',10)
@@ -32,7 +32,7 @@ class RealSenseListener(Node):
         self.tf_broadcaster = TransformBroadcaster(self)
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
-        self.timer = self.create_timer(1.0, self.on_timer)
+        self.timer = self.create_timer(0.1, self.on_timer)
         #mediapipe
         self.mp_pose = mp.solutions.pose
         self.lmPose  = self.mp_pose.PoseLandmark
@@ -82,11 +82,14 @@ class RealSenseListener(Node):
             #get image from msg
             depth_image = self.bridge.imgmsg_to_cv2(data, data.encoding)
             #mediapipe pose
+            # self.get_logger().info(f"{depth_image.shape}")
             if self.intrinsics:
                 if self.detect_people and self.follow_enb:
                     # self.get_logger().info("publish coordinate")
-                    depth = depth_image[self.point_y, self.point_x]
-                    XYZ = rs2.rs2_deproject_pixel_to_point(self.intrinsics, [self.point_x, self.point_y], depth)
+                    x_depth = int(self.point_x * 848 / 1280)
+                    y_depth = int(self.point_y * 480 / 800)
+                    depth = depth_image[y_depth, x_depth]
+                    XYZ = rs2.rs2_deproject_pixel_to_point(self.intrinsics, [x_depth, y_depth], depth)
                     t = TransformStamped()
                     # Read message content and assign it to
                     # corresponding tf variables
@@ -96,12 +99,15 @@ class RealSenseListener(Node):
 
                     # Turtle only exists in 2D, thus we get x and y translation
                     # coordinates from the message and set the z coordinate to 0
+                    self.x_pos = XYZ[2]/1000.0
+                    self.y_pos = -XYZ[0]/1000.0
                     t.transform.translation.x = XYZ[2]/1000.0 # mm to m
-                    t.transform.translation.y = -XYZ[0]/1000.0 # mm to m
+                    t.transform.translation.y = -XYZ[0]/1000.0# mm to m
                     t.transform.translation.z = 0.0
 
                     # Send the transformation
                     self.tf_broadcaster.sendTransform(t)
+                    
 
         except CvBridgeError as e:
             print(e)
@@ -134,18 +140,18 @@ class RealSenseListener(Node):
 
         if self.status.data == 1:
             try:
-                t = self.tf_buffer.lookup_transform(
-                    to_frame_rel,
-                    from_frame_rel,
-                    rclpy.time.Time())
-                self.get_logger().info(f"global coordinate X:{ t.transform.translation.x} Y:{ t.transform.translation.y} Z:{ t.transform.translation.z}")
+                # t = self.tf_buffer.lookup_transform(
+                #     to_frame_rel,
+                #     from_frame_rel,
+                #     rclpy.time.Time())
+                # self.get_logger().info(f"global coordinate X:{ t.transform.translation.x} Y:{ t.transform.translation.y} Z:{ t.transform.translation.z}")
                 pose_msg = PoseStamped()
                 pose_msg.header.stamp = self.get_clock().now().to_msg()
-                pose_msg.pose.position.x = t.transform.translation.x
-                pose_msg.pose.position.y = t.transform.translation.y
+                pose_msg.pose.position.x = self.x_pos
+                pose_msg.pose.position.y = self.y_pos
                 self.goal_updater.publish(pose_msg)
             except TransformException as ex:
-                self.get_logger().info(f'Could not transform {to_frame_rel} to {from_frame_rel}: {ex}')
+                # self.get_logger().info(f'Could not transform {to_frame_rel} to {from_frame_rel}: {ex}')
                 return
         self.status_pub.publish(self.status)
         if self.status.data == 2:
